@@ -42,6 +42,7 @@ def command(opts, parser, extra_arg_groups=None):
     from rez.release_vcs import create_release_vcs
     from rez.cli.build import get_build_args
     from rez.config import config
+    from rez.vendor.lockfile import LockFailed
 
     # load package
     working_dir = os.getcwd()
@@ -134,8 +135,14 @@ def command(opts, parser, extra_arg_groups=None):
                 sys.exit(1)
 
     # perform the release
-    builder.release(release_message=release_msg or None,
-                    variants=opts.variants)
+    import getpass
+    try:
+        builder.release(release_message=release_msg or None,
+			    variants=opts.variants)
+    except LockFailed:
+        print "\nError: Can not release as user: %s" % getpass.getuser()
+	print "Try rezmanrelease\n"
+	sys.exit(1)
 
     # remove the release message file
     if filepath:
